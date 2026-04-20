@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>◈ INFO MONITOR</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
+:root{--bg:#080a0f;--sf:#111420;--sf2:#1a1e2a;--bd:#252a38;--fg:#e2e5ed;--fg2:#636b8a;--accent:#2dd4a0;--accent2:#38bdf8;--amber:#f5a623;--red:#ef4444}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;padding:18px 14px 48px}
+a{color:var(--accent2);text-decoration:none}a:hover{text-decoration:underline}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes glow{0%,100%{box-shadow:0 0 6px rgba(45,212,160,.15)}50%{box-shadow:0 0 16px rgba(45,212,160,.3)}}
+
+.container{max-width:880px;margin:0 auto}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.h1{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;letter-spacing:.05em}
+.h1 .g{color:var(--accent)}.ver{font-size:10px;background:var(--sf2);padding:2px 6px;border-radius:5px;margin-left:5px;color:var(--fg2);font-weight:400}
+.sub{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--fg2);margin-top:2px}
+.hbtns{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.hbtn{display:flex;align-items:center;gap:5px;background:var(--sf2);border:1px solid var(--bd);color:var(--fg2);border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif}
+.sel{background:var(--sf2);border:1px solid var(--bd);color:var(--fg);border-radius:7px;padding:6px 10px;font-size:12px;font-family:'Outfit',sans-serif;cursor:pointer;outline:none}
+.sel option{background:var(--sf2);color:var(--fg)}
+
+.banner{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:11px 14px;margin-bottom:12px;font-size:12px;line-height:1.6;color:var(--fg2)}
+.banner strong{color:var(--accent)}
+
+.config-row{display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
+.key-input{flex:1;min-width:180px;background:var(--sf);border:1px solid var(--bd);color:var(--fg);border-radius:8px;padding:8px 12px;font-size:12px;font-family:'IBM Plex Mono',monospace;outline:none}
+.key-input:focus{border-color:var(--accent)}
+.key-status{font-size:11px;font-family:'IBM Plex Mono',monospace;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.key-status.ok{color:var(--accent);background:rgba(45,212,160,.1)}
+.key-status.no{color:var(--red);background:rgba(239,68,68,.1)}
+
+.model-info{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--fg2);padding:2px 0 0 2px}
+
+.add-bar{display:flex;gap:7px;margin-bottom:8px}
+.topic-input{flex:1;background:var(--sf);border:1px solid var(--bd);color:var(--fg);border-radius:9px;padding:10px 14px;font-size:13px;font-family:'Outfit',sans-serif;outline:none}
+.topic-input:focus{border-color:var(--accent)}
+.go-btn{display:flex;align-items:center;gap:5px;background:var(--accent);color:#000;border:none;border-radius:9px;padding:10px 16px;font-size:13px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;white-space:nowrap}
+
+.pills{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px}
+.pill{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:14px;border:1px solid var(--bd);display:inline-flex;align-items:center;color:var(--fg2)}
+.pill.pw{border-color:rgba(245,166,35,.35);color:var(--amber)}
+
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:11px;overflow:hidden;animation:fadeUp .3s ease;margin-bottom:12px}
+.card-head{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-bottom:1px solid var(--bd)}
+.card-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;animation:glow 3s ease infinite}
+.card-title{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:8px;flex:1}
+.card-btns{display:flex;gap:2px}
+.card-body{padding:10px 14px 14px}
+
+.ib{background:none;border:none;color:var(--fg2);cursor:pointer;padding:4px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.ib:hover{color:var(--fg)}
+.ib.spinning{animation:spin 1s linear infinite}
+
+.src-block{background:var(--sf2);border-radius:8px;border-left:3px solid var(--bd);overflow:hidden;margin-bottom:6px}
+.src-block.found{border-left-color:var(--accent)}
+.src-block.found-pw{border-left-color:var(--amber)}
+.src-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer}
+.src-head:hover{background:rgba(255,255,255,.02)}
+.article{padding:8px 14px;border-top:1px solid rgba(255,255,255,.04)}
+.art-title{font-weight:600;font-size:13px;line-height:1.4}
+.art-date{font-size:10px;color:var(--fg2);font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.art-sum{font-size:12.5px;line-height:1.65;color:var(--fg);margin-top:4px}
+.art-url{font-size:10.5px;display:inline-block;margin-top:4px;word-break:break-all;opacity:.8}
+.pw-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--amber);margin-top:4px;padding:2px 8px;background:rgba(245,166,35,.1);border-radius:4px}
+
+.ts{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--fg2);margin-bottom:8px;letter-spacing:.04em;text-transform:uppercase}
+.progress{font-size:12px;color:var(--accent2);font-family:'IBM Plex Mono',monospace;animation:pulse 1.5s ease infinite}
+.err{color:var(--red);font-size:12px;margin-bottom:8px}
+.empty{text-align:center;color:var(--fg2);padding:44px 20px;font-size:13px}
+
+.pasted-card{background:var(--sf2);border:1px solid rgba(245,166,35,.2);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.pasted-text{font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:100;display:none}
+.overlay.show{display:flex}
+.overlay.right{justify-content:flex-end}
+.overlay.center{justify-content:center;align-items:center}
+
+.panel{width:350px;max-width:90vw;background:var(--sf);border-left:1px solid var(--bd);height:100%;display:flex;flex-direction:column}
+.modal{width:520px;max-width:92vw;background:var(--sf);border:1px solid var(--bd);border-radius:14px;max-height:85vh;display:flex;flex-direction:column;animation:fadeUp .2s ease;overflow:hidden}
+.panel-head{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--bd)}
+.panel-title{font-weight:600;font-size:13.5px}
+.panel-body{padding:18px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:6px}
+
+.src-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.chip{border:none;border-radius:7px;padding:7px 12px;font-size:12.5px;font-family:'Outfit',sans-serif;cursor:pointer;flex:1;text-align:left;transition:all .15s}
+.chip.on{background:var(--accent);color:#000}
+.chip.off{background:var(--sf2);color:var(--fg2)}
+.chip-domain{font-size:10px;opacity:.6;margin-top:2px}
+
+.inp{width:100%;background:var(--sf2);border:1px solid var(--bd);color:var(--fg);border-radius:7px;padding:9px 12px;font-size:12.5px;font-family:'Outfit',sans-serif;outline:none}
+.inp:focus{border-color:var(--accent)}
+.add-btn2{display:flex;align-items:center;gap:4px;background:var(--accent);color:#000;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto;font-family:'Outfit',sans-serif}
+.filter-btns{padding:10px 18px 0;display:flex;gap:5px}
+.fbtn{background:var(--sf2);border:1px solid var(--bd);color:var(--fg2);border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Outfit',sans-serif}
+.fbtn.active{background:var(--accent);color:#000}
+.hint{background:var(--sf2);border-radius:7px;padding:8px 12px;font-size:12px;line-height:1.5;color:var(--fg2)}
+
+@media(max-width:600px){
+  .header{flex-direction:column}
+  .hbtns{width:100%}
+  .modal{width:95vw;max-height:90vh}
+  .config-row{flex-direction:column;align-items:stretch}
+}
+</style>
+</head>
+<body>
+<div class="container" id="app">
+
+  <header class="header">
+    <div>
+      <h1 class="h1"><span class="g">◈</span> INFO MONITOR <span class="ver">Local · Gemini Free</span></h1>
+      <p class="sub" id="subtitle">0 topics · 0 sources</p>
+    </div>
+    <div class="hbtns">
+      <select class="sel" id="langSel">
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+        <option value="bi">Bilingual</option>
+      </select>
+      <select class="sel" id="modelSel">
+        <option value="gemini-2.5-pro-preview-05-06">2.5 Pro (5/min, 100/day)</option>
+        <option value="gemini-2.5-flash-preview-04-17" selected>2.5 Flash (10/min, 250/day)</option>
+        <option value="gemini-2.5-flash-lite-preview-06-17">2.5 Flash-Lite (15/min, 1000/day)</option>
+      </select>
+      <button class="hbtn" onclick="showSourcePanel()">⚙ Sources</button>
+    </div>
+  </header>
+
+  <!-- API Key + model info -->
+  <div class="config-row">
+    <input class="key-input" id="apiKeyInput" type="password" placeholder="Paste Gemini API Key (from aistudio.google.com)">
+    <button class="hbtn" onclick="saveApiKey()">Save</button>
+    <span class="key-status no" id="keyStatus">No key</span>
+  </div>
+  <div class="model-info" id="modelInfo">Model: 2.5 Flash · 10 req/min · 250 req/day · Free tier</div>
+
+  <div class="banner">
+    <strong>免费方案：</strong>Gemini 免费 API + Google Search。逐源搜索 + 域名验证 + 真实 URL。付费文章可粘贴全文自动摘要。所有配置自动保存在浏览器本地。
+  </div>
+
+  <div class="add-bar">
+    <input class="topic-input" id="topicInput" placeholder="输入监控主题… e.g. semiconductor export controls">
+    <button class="go-btn" onclick="addTopic()">＋ Add</button>
+  </div>
+
+  <div class="pills" id="pillsBar"></div>
+
+  <div id="cardsContainer">
+    <div class="empty" id="emptyMsg">Add a topic above to start monitoring.</div>
+  </div>
+</div>
+
+<!-- Source Panel -->
+<div class="overlay right" id="srcOverlay" onclick="hideSourcePanel()">
+  <div class="panel" onclick="event.stopPropagation()">
+    <div class="panel-head">
+      <span class="panel-title">信源管理 / Sources</span>
+      <button class="ib" onclick="hideSourcePanel()">✕</button>
+    </div>
+    <div class="filter-btns">
+      <button class="fbtn active" data-f="all" onclick="filterSources('all',this)">All</button>
+      <button class="fbtn" data-f="free" onclick="filterSources('free',this)">Free</button>
+      <button class="fbtn" data-f="paid" onclick="filterSources('paid',this)">Paywall</button>
+    </div>
+    <div class="panel-body" id="srcList"></div>
+    <div style="padding:14px 18px;border-top:1px solid var(--bd)">
+      <div style="font-size:11px;color:var(--fg2);margin-bottom:6px">Add new source:</div>
+      <input class="inp" id="newSrcName" placeholder="Name (e.g. Bloomberg)" style="margin-bottom:5px">
+      <input class="inp" id="newSrcDomain" placeholder="Domain (e.g. bloomberg.com)" style="margin-bottom:5px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:11px;color:var(--fg2);cursor:pointer;display:flex;align-items:center;gap:4px">
+          <input type="checkbox" id="newSrcPaid" style="accent-color:var(--amber)"> Paywalled
+        </label>
+        <button class="add-btn2" onclick="addSource()">＋ Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Paste Modal -->
+<div class="overlay center" id="pasteOverlay" onclick="hidePasteModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="panel-head">
+      <span class="panel-title">粘贴文章 / Paste Article</span>
+      <button class="ib" onclick="hidePasteModal()">✕</button>
+    </div>
+    <div style="padding:18px;display:flex;flex-direction:column;gap:10px;flex:1;overflow:auto">
+      <div class="hint"><strong>操作：</strong>Quetta/浏览器打开文章 → 全选复制 → 粘贴到下方</div>
+      <input class="inp" id="pasteSrc" placeholder="来源 (e.g. WSJ, FT)">
+      <textarea class="inp" id="pasteText" placeholder="粘贴文章全文…" style="flex:1;min-height:160px;resize:vertical;line-height:1.6"></textarea>
+      <button class="go-btn" id="pasteSubmitBtn" onclick="submitPaste()" style="width:100%;justify-content:center">Analyze 分析</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Models ──
+const MODELS = {
+  'gemini-2.5-pro-preview-05-06': {label:'2.5 Pro', rpm:5, rpd:100},
+  'gemini-2.5-flash-preview-04-17': {label:'2.5 Flash', rpm:10, rpd:250},
+  'gemini-2.5-flash-lite-preview-06-17': {label:'2.5 Flash-Lite', rpm:15, rpd:1000},
+};
+
+// ── State ──
+let state = {
+  apiKey: '',
+  lang: 'en',
+  model: 'gemini-2.5-flash-preview-04-17',
+  sources: [
+    {id:'s1',name:'Reuters',domain:'reuters.com',free:true,enabled:true},
+    {id:'s2',name:'AP News',domain:'apnews.com',free:true,enabled:true},
+    {id:'s3',name:'BBC',domain:'bbc.com',free:true,enabled:true},
+    {id:'s4',name:'The Guardian',domain:'theguardian.com',free:true,enabled:true},
+    {id:'s5',name:'NPR',domain:'npr.org',free:true,enabled:false},
+    {id:'s6',name:'Al Jazeera',domain:'aljazeera.com',free:true,enabled:false},
+    {id:'s7',name:'DW',domain:'dw.com',free:true,enabled:false},
+    {id:'s8',name:'Nature',domain:'nature.com',free:true,enabled:true},
+    {id:'s9',name:'WSJ',domain:'wsj.com',free:false,enabled:true},
+    {id:'s10',name:'Financial Times',domain:'ft.com',free:false,enabled:true},
+    {id:'s11',name:'The Economist',domain:'economist.com',free:false,enabled:false},
+    {id:'s12',name:'NYT',domain:'nytimes.com',free:false,enabled:false},
+    {id:'s13',name:'SCMP',domain:'scmp.com',free:false,enabled:true},
+    {id:'s14',name:'Bloomberg',domain:'bloomberg.com',free:false,enabled:false},
+    {id:'s15',name:'Caixin 财新',domain:'caixin.com',free:false,enabled:false},
+    {id:'s16',name:'Xinhua 新华社',domain:'xinhuanet.com',free:true,enabled:false},
+  ],
+  topics: []
+};
+
+let srcFilter = 'all';
+let pasteTopicId = null;
+
+// ── Persistence ──
+function save() {
+  const s = {...state};
+  s.topics = s.topics.map(t => ({id:t.id, name:t.name, articles:t.articles||[]}));
+  localStorage.setItem('infomonitor_v4', JSON.stringify(s));
+}
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem('infomonitor_v4'));
+    if (s) {
+      state.apiKey = s.apiKey || '';
+      state.lang = s.lang || 'en';
+      state.model = s.model || 'gemini-2.5-flash-preview-04-17';
+      if (s.sources) state.sources = s.sources;
+      if (s.topics) state.topics = s.topics.map(t => ({...t, results:[], lastTime:null}));
+    }
+  } catch(e) {}
+}
+
+function uid() { return 'i' + Math.random().toString(36).slice(2,9); }
+
+// ── API Key ──
+function saveApiKey() {
+  state.apiKey = document.getElementById('apiKeyInput').value.trim();
+  save(); updateKeyStatus();
+}
+function updateKeyStatus() {
+  const el = document.getElementById('keyStatus');
+  const inp = document.getElementById('apiKeyInput');
+  if (state.apiKey) {
+    el.textContent = '✓ Saved'; el.className = 'key-status ok';
+    inp.value = state.apiKey.slice(0,8) + '…';
+  } else {
+    el.textContent = 'No key'; el.className = 'key-status no'; inp.value = '';
+  }
+}
+
+// ── Model selector ──
+function updateModelInfo() {
+  const m = MODELS[state.model];
+  document.getElementById('modelInfo').textContent = 
+    `Model: ${m.label} · ${m.rpm} req/min · ${m.rpd} req/day · Free tier`;
+}
+
+document.getElementById('modelSel').addEventListener('change', e => {
+  state.model = e.target.value;
+  updateModelInfo(); save();
+});
+
+// ── Gemini API ──
+async function callGemini(prompt, useSearch = true) {
+  if (!state.apiKey) throw new Error('请先设置 API Key (aistudio.google.com)');
+  
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { maxOutputTokens: 3000 }
+  };
+  if (useSearch) body.tools = [{ google_search: {} }];
+  
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${state.model}:generateContent?key=${state.apiKey}`,
+    { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }
+  );
+  
+  const data = await resp.json();
+  if (data.error) {
+    if (data.error.code === 429) throw new Error('Rate limit reached. 请求次数已达上限，请稍后再试。');
+    throw new Error(data.error.message || 'API error');
+  }
+  
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  return parts.map(p => p.text || '').join('\n');
+}
+
+// ── Per-source search ──
+async function searchSourceBatch(topic, sourceBatch) {
+  const langInstr = state.lang === 'zh' ? 'Respond entirely in Chinese (简体中文).'
+    : state.lang === 'bi' ? 'Each item: English first, then Chinese translation below.'
+    : 'Respond in English.';
+  
+  const srcList = sourceBatch.map(s => `- ${s.name} (site:${s.domain})`).join('\n');
+  
+  const prompt = `Search for the latest news about "${topic}" SPECIFICALLY from these sources:
+${srcList}
+
+For EACH source, search using "site:domain" to find articles FROM that specific outlet.
+
+Return a JSON array (no markdown fences, pure JSON only). Each element:
+{
+  "source_name": "Reuters",
+  "source_domain": "reuters.com",
+  "status": "found" or "not_found",
+  "articles": [
+    {
+      "title": "Headline here",
+      "url": "full URL from the source",
+      "date": "approximate date",
+      "summary": "3-4 sentence summary with specifics",
+      "is_paywalled": false
+    }
+  ]
+}
+
+Rules:
+- Search EACH source individually using site:domain
+- Only include articles actually FROM that source's domain
+- If no articles found, set status to "not_found", articles to []
+- Up to 3 most relevant recent articles per source
+- URLs must be real URLs you found
+- ${langInstr}
+
+Return ONLY the JSON array.`;
+
+  const text = await callGemini(prompt, true);
+  
+  try {
+    const clean = text.replace(/```json|```/g, '').trim();
+    const match = clean.match(/\[[\s\S]*\]/);
+    if (match) return JSON.parse(match[0]);
+  } catch(e) {}
+  
+  return sourceBatch.map(s => ({
+    source_name: s.name, source_domain: s.domain,
+    status: 'raw', raw_text: text, articles: []
+  }));
+}
+
+async function summarizeArticle(text, topic) {
+  const langInstr = state.lang === 'zh' ? 'Respond in Chinese.'
+    : state.lang === 'bi' ? 'Respond bilingually.' : 'Respond in English.';
+  return await callGemini(
+    `Analyze this article in context of "${topic}". Provide: 1) Source & Date 2) 5-8 key takeaways 3) Unique insights. ${langInstr}\n\nArticle:\n${text.slice(0,12000)}`,
+    false
+  );
+}
+
+// ── Source Panel ──
+function showSourcePanel() { document.getElementById('srcOverlay').classList.add('show'); renderSourceList(); }
+function hideSourcePanel() { document.getElementById('srcOverlay').classList.remove('show'); renderPills(); save(); }
+function filterSources(f, btn) {
+  srcFilter = f;
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSourceList();
+}
+function renderSourceList() {
+  const list = srcFilter === 'free' ? state.sources.filter(s=>s.free)
+    : srcFilter === 'paid' ? state.sources.filter(s=>!s.free) : state.sources;
+  document.getElementById('srcList').innerHTML = list.map(s => `
+    <div class="src-row">
+      <button class="chip ${s.enabled?'on':'off'}" onclick="toggleSource('${s.id}')">
+        <div style="display:flex;align-items:center;gap:5px">
+          ${s.free?'':'🔒 '}<span>${s.name}</span>
+        </div>
+        <div class="chip-domain">${s.domain}</div>
+      </button>
+      <button class="ib" onclick="removeSource('${s.id}')">✕</button>
+    </div>
+  `).join('');
+}
+function toggleSource(id) {
+  const s = state.sources.find(x=>x.id===id);
+  if(s) s.enabled = !s.enabled;
+  renderSourceList(); renderPills(); save();
+}
+function removeSource(id) {
+  state.sources = state.sources.filter(x=>x.id!==id);
+  renderSourceList(); renderPills(); updateSubtitle(); save();
+}
+function addSource() {
+  const name = document.getElementById('newSrcName').value.trim();
+  const domain = document.getElementById('newSrcDomain').value.trim();
+  if(!name||!domain) return;
+  state.sources.push({id:uid(),name,domain,free:!document.getElementById('newSrcPaid').checked,enabled:true});
+  document.getElementById('newSrcName').value='';
+  document.getElementById('newSrcDomain').value='';
+  document.getElementById('newSrcPaid').checked=false;
+  renderSourceList(); renderPills(); updateSubtitle(); save();
+}
+
+// ── Pills ──
+function renderPills() {
+  document.getElementById('pillsBar').innerHTML = state.sources.filter(s=>s.enabled).map(s =>
+    `<span class="pill ${s.free?'':'pw'}">${s.free?'':'🔒 '}${s.name} <span style="opacity:.5;margin-left:3px">${s.domain}</span></span>`
+  ).join('');
+}
+
+// ── Topics ──
+function addTopic() {
+  const inp = document.getElementById('topicInput');
+  const name = inp.value.trim();
+  if(!name) return;
+  if(!state.apiKey) { alert('请先设置 Gemini API Key'); return; }
+  state.topics.push({id:uid(), name, results:[], articles:[], lastTime:null});
+  inp.value = '';
+  save(); renderCards();
+  fetchTopic(state.topics[state.topics.length-1].id);
+}
+function removeTopic(id) {
+  state.topics = state.topics.filter(t=>t.id!==id);
+  save(); renderCards();
+}
+
+// ── Fetch ──
+async function fetchTopic(topicId) {
+  const topic = state.topics.find(t=>t.id===topicId);
+  if(!topic) return;
+  const enabled = state.sources.filter(s=>s.enabled);
+  if(!enabled.length) { renderCards(); return; }
+  
+  topic.results = []; topic.lastTime = null;
+  renderCards();
+  
+  const batches = [];
+  for(let i=0;i<enabled.length;i+=3) batches.push(enabled.slice(i,i+3));
+  
+  for(let bi=0;bi<batches.length;bi++) {
+    const batch = batches[bi];
+    setProgress(topicId, `Searching ${batch.map(s=>s.name).join(', ')}… (${bi+1}/${batches.length})`);
+    try {
+      const results = await searchSourceBatch(topic.name, batch);
+      topic.results.push(...results);
+      renderCards();
+    } catch(e) {
+      batch.forEach(s => topic.results.push({
+        source_name:s.name, source_domain:s.domain, status:'error', error:e.message, articles:[]
+      }));
+      renderCards();
+    }
+  }
+  
+  topic.lastTime = new Date().toLocaleTimeString();
+  setProgress(topicId, null);
+  save(); renderCards();
+}
+
+function setProgress(id, msg) {
+  const el = document.getElementById('progress-'+id);
+  if(el) {
+    if(msg) { el.innerHTML = `<span class="progress">${msg}</span>`; el.style.display='block'; }
+    else el.style.display='none';
+  }
+  const btn = document.getElementById('refresh-'+id);
+  if(btn) { if(msg) btn.classList.add('spinning'); else btn.classList.remove('spinning'); }
+}
+
+// ── Paste ──
+function showPasteModal(tid) {
+  pasteTopicId = tid;
+  document.getElementById('pasteSrc').value = '';
+  document.getElementById('pasteText').value = '';
+  document.getElementById('pasteOverlay').classList.add('show');
+}
+function hidePasteModal() { document.getElementById('pasteOverlay').classList.remove('show'); pasteTopicId = null; }
+async function submitPaste() {
+  const text = document.getElementById('pasteText').value.trim();
+  const src = document.getElementById('pasteSrc').value.trim() || 'Unknown';
+  if(!text || !pasteTopicId) return;
+  const btn = document.getElementById('pasteSubmitBtn');
+  btn.textContent = 'Analyzing…'; btn.disabled = true;
+  try {
+    const topic = state.topics.find(t=>t.id===pasteTopicId);
+    if(!topic) return;
+    const summary = await summarizeArticle(text, topic.name);
+    if(!topic.articles) topic.articles = [];
+    topic.articles.unshift({id:uid(), source:src, summary, time:new Date().toLocaleTimeString()});
+    save(); hidePasteModal(); renderCards();
+  } catch(e) { alert('Error: ' + e.message); }
+  btn.textContent = 'Analyze 分析'; btn.disabled = false;
+}
+function removePasted(tid, aid) {
+  const t = state.topics.find(x=>x.id===tid);
+  if(t) t.articles = (t.articles||[]).filter(a=>a.id!==aid);
+  save(); renderCards();
+}
+
+// ── Render Cards ──
+function renderCards() {
+  updateSubtitle();
+  const container = document.getElementById('cardsContainer');
+  const empty = document.getElementById('emptyMsg');
+  if(!state.topics.length) { empty.style.display='block'; container.querySelectorAll('.card').forEach(c=>c.remove()); return; }
+  empty.style.display='none';
+  const srcMap = Object.fromEntries(state.sources.map(s=>[s.domain,s]));
+  
+  let html = '';
+  for(const t of state.topics) {
+    const foundCount = (t.results||[]).filter(r=>r.status==='found'&&r.articles?.length).length;
+    const totalCount = (t.results||[]).length;
+    
+    html += `<div class="card">
+      <div class="card-head">
+        <div style="display:flex;align-items:center;flex:1;min-width:0">
+          <span class="card-dot"></span>
+          <span class="card-title">${esc(t.name)}</span>
+        </div>
+        <div class="card-btns">
+          <button class="ib" onclick="showPasteModal('${t.id}')" title="Paste article">📋</button>
+          <button class="ib" id="refresh-${t.id}" onclick="fetchTopic('${t.id}')" title="Refresh">↻</button>
+          <button class="ib" onclick="removeTopic('${t.id}')">✕</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="progress-${t.id}" style="margin-bottom:8px;display:none"></div>`;
+    
+    if(t.lastTime) html += `<div class="ts">${foundCount}/${totalCount} sources matched · Updated ${t.lastTime}</div>`;
+    
+    for(const r of (t.results||[])) {
+      const si = srcMap[r.source_domain];
+      const isFree = si?.free !== false;
+      const found = r.status==='found' && r.articles?.length;
+      
+      html += `<div class="src-block ${found?(isFree?'found':'found-pw'):''}">
+        <div class="src-head">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="color:${found?'var(--accent)':'var(--red)'}">${found?'✓':'—'}</span>
+            <span style="font-weight:600;font-size:13px">${esc(r.source_name)}</span>
+            <span style="font-size:10px;color:var(--fg2)">${esc(r.source_domain||'')}</span>
+            ${isFree?'':'<span style="color:var(--amber)">🔒</span>'}
+          </div>
+          <span style="font-size:11px;color:var(--fg2)">${found?r.articles.length+' article'+(r.articles.length>1?'s':''):(r.status==='error'?'Error':'No results')}</span>
+        </div>`;
+      
+      if(found) {
+        for(const a of r.articles) {
+          html += `<div class="article">
+            <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+              <span class="art-title">${esc(a.title||'')}</span>
+              ${a.date?`<span class="art-date">${esc(a.date)}</span>`:''}
+            </div>
+            <div class="art-sum">${esc(a.summary||'')}</div>
+            ${a.url?`<a class="art-url" href="${esc(a.url)}" target="_blank">${esc(a.url.length>80?a.url.slice(0,80)+'…':a.url)}</a>`:''}
+            ${a.is_paywalled?'<div class="pw-tag">🔒 Paywalled</div>':''}
+          </div>`;
+        }
+      }
+      if(r.status==='raw'&&r.raw_text) html+=`<div class="article"><div class="art-sum" style="white-space:pre-wrap">${esc(r.raw_text)}</div></div>`;
+      if(r.status==='error') html+=`<div style="padding:4px 14px 10px;color:var(--red);font-size:11px">${esc(r.error||'Failed')}</div>`;
+      html += '</div>';
+    }
+    
+    if(t.articles?.length) {
+      html += `<div style="margin-top:14px"><div class="ts" style="color:var(--amber)">🔒 MANUALLY ADDED (${t.articles.length})</div>`;
+      for(const a of t.articles) {
+        html += `<div class="pasted-card">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:11px;color:var(--amber);font-family:'IBM Plex Mono',monospace">${esc(a.source)} · ${a.time}</span>
+            <button class="ib" style="opacity:.5" onclick="removePasted('${t.id}','${a.id}')">✕</button>
+          </div>
+          <div class="pasted-text">${esc(a.summary)}</div>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+  
+  container.querySelectorAll('.card').forEach(c=>c.remove());
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+function updateSubtitle() {
+  const fc = state.sources.filter(s=>s.enabled&&s.free).length;
+  const pc = state.sources.filter(s=>s.enabled&&!s.free).length;
+  document.getElementById('subtitle').textContent = `${state.topics.length} topics · ${fc} free + ${pc} paywalled`;
+}
+
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+// ── Language ──
+document.getElementById('langSel').addEventListener('change', e => { state.lang=e.target.value; save(); });
+
+// ── Enter key ──
+document.getElementById('topicInput').addEventListener('keydown', e => { if(e.key==='Enter') addTopic(); });
+
+// ── Init ──
+load();
+document.getElementById('langSel').value = state.lang;
+document.getElementById('modelSel').value = state.model;
+updateKeyStatus();
+updateModelInfo();
+renderPills();
+renderCards();
+</script>
+</body>
+</html>
